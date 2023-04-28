@@ -103,7 +103,7 @@ s! {
 const _PTHREAD_ATTR_SIZE: usize = 32;
 const _PTHREAD_RWLOCKATTR_SIZE: usize = 4;
 const _PTHREAD_RWLOCK_SIZE: usize = 4;
-const _PTHREAD_BARRIER_SIZE: usize = 12;
+const _PTHREAD_BARRIER_SIZE: usize = 24;
 const _PTHREAD_BARRIERATTR_SIZE: usize = 4;
 const _PTHREAD_CONDATTR_SIZE: usize = 8;
 const _PTHREAD_COND_SIZE: usize = 8;
