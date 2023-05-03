@@ -74,7 +74,7 @@ s! {
         bytes: [u8; _PTHREAD_MUTEXATTR_SIZE],
     }
     #[repr(C)]
-    #[repr(align(4))]
+    #[repr(align(1))]
     pub struct pthread_rwlockattr_t {
         bytes: [u8; _PTHREAD_RWLOCKATTR_SIZE],
     }
