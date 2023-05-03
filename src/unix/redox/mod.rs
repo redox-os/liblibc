@@ -28,16 +28,9 @@ pub type nfds_t = ::c_ulong;
 pub type nlink_t = ::c_ulong;
 pub type off_t = ::c_longlong;
 pub type pthread_t = *mut ::c_void;
-pub type pthread_attr_t = *mut ::c_void;
-pub type pthread_cond_t = *mut ::c_void;
-pub type pthread_condattr_t = *mut ::c_void;
 // Must be usize due to libstd/sys_common/thread_local.rs,
 // should technically be *mut ::c_void
 pub type pthread_key_t = usize;
-pub type pthread_mutex_t = *mut ::c_void;
-pub type pthread_mutexattr_t = *mut ::c_void;
-pub type pthread_rwlock_t = *mut ::c_void;
-pub type pthread_rwlockattr_t = *mut ::c_void;
 pub type rlim_t = ::c_ulonglong;
 pub type sa_family_t = u16;
 pub type sem_t = *mut ::c_void;
@@ -48,6 +41,76 @@ pub type suseconds_t = ::c_int;
 pub type tcflag_t = u32;
 pub type time_t = ::c_longlong;
 pub type id_t = ::c_uint;
+
+s! {
+    #[repr(C)]
+    #[repr(align(8))]
+    pub struct pthread_attr_t {
+        bytes: [u8; _PTHREAD_ATTR_SIZE],
+    }
+    #[repr(C)]
+    #[repr(align(4))]
+    pub struct pthread_barrier_t {
+        bytes: [u8; _PTHREAD_BARRIER_SIZE],
+    }
+    #[repr(C)]
+    #[repr(align(4))]
+    pub struct pthread_barrierattr_t {
+        bytes: [u8; _PTHREAD_BARRIERATTR_SIZE],
+    }
+    #[repr(C)]
+    #[repr(align(4))]
+    pub struct pthread_mutex_t {
+        bytes: [u8; _PTHREAD_MUTEX_SIZE],
+    }
+    #[repr(C)]
+    #[repr(align(4))]
+    pub struct pthread_rwlock_t {
+        bytes: [u8; _PTHREAD_RWLOCK_SIZE],
+    }
+    #[repr(C)]
+    #[repr(align(4))]
+    pub struct pthread_mutexattr_t {
+        bytes: [u8; _PTHREAD_MUTEXATTR_SIZE],
+    }
+    #[repr(C)]
+    #[repr(align(1))]
+    pub struct pthread_rwlockattr_t {
+        bytes: [u8; _PTHREAD_RWLOCKATTR_SIZE],
+    }
+    #[repr(C)]
+    #[repr(align(4))]
+    pub struct pthread_cond_t {
+        bytes: [u8; _PTHREAD_COND_SIZE],
+    }
+    #[repr(C)]
+    #[repr(align(4))]
+    pub struct pthread_condattr_t {
+        bytes: [u8; _PTHREAD_CONDATTR_SIZE],
+    }
+    #[repr(C)]
+    #[repr(align(4))]
+    pub struct pthread_once_t {
+        bytes: [u8; _PTHREAD_ONCE_SIZE],
+    }
+    #[repr(C)]
+    #[repr(align(4))]
+    pub struct pthread_spinlock_t {
+        bytes: [u8; _PTHREAD_SPINLOCK_SIZE],
+    }
+}
+
+const _PTHREAD_ATTR_SIZE: usize = 32;
+const _PTHREAD_RWLOCKATTR_SIZE: usize = 1;
+const _PTHREAD_RWLOCK_SIZE: usize = 4;
+const _PTHREAD_BARRIER_SIZE: usize = 24;
+const _PTHREAD_BARRIERATTR_SIZE: usize = 4;
+const _PTHREAD_CONDATTR_SIZE: usize = 8;
+const _PTHREAD_COND_SIZE: usize = 8;
+const _PTHREAD_MUTEX_SIZE: usize = 12;
+const _PTHREAD_MUTEXATTR_SIZE: usize = 20;
+const _PTHREAD_ONCE_SIZE: usize = 4;
+const _PTHREAD_SPINLOCK_SIZE: usize = 4;
 
 #[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum timezone {}
@@ -532,9 +595,9 @@ pub const POLLNVAL: ::c_short = 0x020;
 // pthread.h
 pub const PTHREAD_MUTEX_NORMAL: ::c_int = 0;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 1;
-pub const PTHREAD_MUTEX_INITIALIZER: ::pthread_mutex_t = -1isize as *mut _;
-pub const PTHREAD_COND_INITIALIZER: ::pthread_cond_t = -1isize as *mut _;
-pub const PTHREAD_RWLOCK_INITIALIZER: ::pthread_rwlock_t = -1isize as *mut _;
+pub const PTHREAD_MUTEX_INITIALIZER: ::pthread_mutex_t = ::pthread_mutex_t { bytes: [0; _PTHREAD_MUTEX_SIZE] };
+pub const PTHREAD_COND_INITIALIZER: ::pthread_cond_t = ::pthread_cond_t { bytes: [0; _PTHREAD_COND_SIZE] };
+pub const PTHREAD_RWLOCK_INITIALIZER: ::pthread_rwlock_t = ::pthread_rwlock_t { bytes: [0; _PTHREAD_RWLOCK_SIZE] };
 pub const PTHREAD_STACK_MIN: ::size_t = 4096;
 
 // signal.h
@@ -996,6 +1059,28 @@ extern "C" {
     pub fn pipe2(fds: *mut ::c_int, flags: ::c_int) -> ::c_int;
     pub fn getdtablesize() -> ::c_int;
 
+    // grp.h
+    pub fn getgrgid_r(
+        gid: ::gid_t,
+        grp: *mut ::group,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        result: *mut *mut ::group,
+    ) -> ::c_int;
+    pub fn getgrnam_r(
+        name: *const ::c_char,
+        grp: *mut ::group,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        result: *mut *mut ::group,
+    ) -> ::c_int;
+    pub fn getgrouplist(
+        user: *const ::c_char,
+        group: ::gid_t,
+        groups: *mut ::gid_t,
+        ngroups: *mut ::c_int,
+    ) -> ::c_int;
+
     // malloc.h
     pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;
 
@@ -1028,6 +1113,16 @@ extern "C" {
     ) -> ::c_int;
 
     // pwd.h
+    pub fn getpwent() -> *mut passwd;
+    pub fn setpwent();
+    pub fn endpwent();
+    pub fn getpwnam_r(
+        name: *const ::c_char,
+        pwd: *mut passwd,
+        buf: *mut ::c_char,
+        buflen: ::size_t,
+        result: *mut *mut passwd,
+    ) -> ::c_int;
     pub fn getpwuid_r(
         uid: ::uid_t,
         pwd: *mut passwd,
