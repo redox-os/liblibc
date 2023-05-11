@@ -42,8 +42,8 @@ pub type tcflag_t = u32;
 pub type time_t = ::c_longlong;
 
 s! {
-    #[repr(C)]
-    #[repr(align(4))]
+    #[cfg_attr(target_pointer_width = "32", repr(C, align(4)))]
+    #[cfg_attr(target_pointer_width = "64", repr(C, align(8)))]
     pub struct pthread_attr_t {
         bytes: [u8; _PTHREAD_ATTR_SIZE],
     }
