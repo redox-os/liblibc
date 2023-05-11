@@ -43,7 +43,7 @@ pub type time_t = ::c_longlong;
 
 s! {
     #[repr(C)]
-    #[repr(align(8))]
+    #[repr(align(4))]
     pub struct pthread_attr_t {
         bytes: [u8; _PTHREAD_ATTR_SIZE],
     }
